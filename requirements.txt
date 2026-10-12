@@ -1,0 +1,12 @@
+ultralytics==8.4.175
+torchvision==0.29.0      # required for shufflenet_v2_x0_5
+torch==2.14.0
+opencv-python==5.0.0.93
+numpy==2.5.3
+pandas==3.0.5
+matplotlib==3.11.1
+pillow==12.3.0
+pyyaml==6.0.3
+tqdm==4.70.0
+trackio==0.40.0
+ipykernel

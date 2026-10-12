@@ -1,0 +1,31 @@
+# YOLO26 neck/head on an ImageNet-pretrained ShuffleNetV2-x0.5 backbone (torchvision).
+# Note: Ultralytics feeds [0,1] images without ImageNet mean/std normalization; the backbone BN stats adapt during fine-tuning.
+nc: 1
+end2end: True
+reg_max: 1
+scales:
+  t: [0.50, 0.125, 512]  # depth, width, max_channels (neck/head only) -> 408,638 params total, nc=1
+ 
+backbone:
+  # TorchVision args: [out_ch, model, weights, unwrap, truncate, split]
+  - [-1, 1, TorchVision, [192, shufflenet_v2_x0_5, DEFAULT, True, 2, True]]  # 0: list of stage outputs
+  - [0, 1, Index, [48, 5]]    # 1: stage2, P3/8
+  - [0, 1, Index, [96, 6]]    # 2: stage3, P4/16
+  - [0, 1, Index, [192, 7]]   # 3: stage4, P5/32
+  - [-1, 1, SPPF, [512, 5]]   # 4
+ 
+head:
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
+  - [[-1, 2], 1, Concat, [1]]  # cat P4
+  - [-1, 2, C3k2, [512, True]] # 7
+  - [-1, 1, nn.Upsample, [None, 2, "nearest"]]
+  - [[-1, 1], 1, Concat, [1]]  # cat P3
+  - [-1, 2, C3k2, [256, True]] # 10 (P3/8)
+  - [-1, 1, Conv, [256, 3, 2]]
+  - [[-1, 7], 1, Concat, [1]]
+  - [-1, 2, C3k2, [512, True]] # 13 (P4/16)
+  - [-1, 1, Conv, [512, 3, 2]]
+  - [[-1, 4], 1, Concat, [1]]
+  - [-1, 1, C3k2, [1024, True, 0.5, True]] # 16 (P5/32)
+  - [[10, 13, 16], 1, Detect, [nc]]
+ 
